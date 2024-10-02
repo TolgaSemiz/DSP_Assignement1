@@ -1,0 +1,68 @@
+% Load the audio file
+[signal, fs] = audioread('voice2.wav'); 
+
+% Check the length of the signal and the sampling frequency
+N = length(signal);
+fprintf('Sampling Frequency: %d Hz\n', fs);
+fprintf('Number of Samples: %d\n', N);
+
+% Crop the signal to get 24,000 samples
+N_target = fs/2; % Desired number of samples for 2 Hz resolution = fs/2
+cropped_signal = signal(1:N_target); % Crop to the first N_target samples
+
+% Compute the magnitude spectrum using the FFT
+Y = fft(cropped_signal);
+Y = Y / N; % Normalize the FFT
+freq = (0:N_target-1)*(fs/N_target); % Frequency vector
+
+% Get only the positive frequencies because they are symetric and complex conjugates
+positive_freqs = freq(1:ceil(N_target/2));
+Y_positive = Y(1:ceil(N_target/2));
+
+% Find the fundamental frequency (peak in the magnitude spectrum)
+[~, maxIndex] = max(abs(Y_positive)); % Index of maximum magnitude
+fundamental_frequency = positive_freqs(maxIndex);
+fprintf('Estimated Fundamental Frequency: %.2f Hz\n', fundamental_frequency);
+
+%Clean signal 
+f0 = fundamental_frequency; % Obtained after checking the peaks at the real signal
+clean_signal = sin(2 * pi * f0 * t_cropped);
+
+Y_clean = fft(clean_signal);
+Y_clean = Y_clean / length(clean_signal); % Normalize the FFT
+freq_clean = (0:length(clean_signal)-1)*(fs/length(clean_signal)); % Frequency vector
+
+% Get only the positive frequencies
+positive_freqs_clean = freq_clean(1:ceil(length(clean_signal)/2));
+Y_positive_clean = Y_clean(1:ceil(length(clean_signal)/2));
+
+% Plot the cropped signal
+t_cropped = (0:N_target-1) / fs; % Time vector for cropped signal
+figure;
+plot(t_cropped, cropped_signal);
+hold on;
+plot((t_cropped+0.0038),clean_signal); % Added a small shift to better fit the two graphs
+title('Recorded Signal and "Clean" Sinusoid in Time Domain');
+xlabel('Time (s)');
+ylabel('Amplitude');
+xlim([0.1926 0.2026]);
+legend('Recorded Signal', 'Clean Signal');
+grid on;
+hold off;
+
+% Plot the magnitude spectrum of the clean signal in dB
+magnitude_dB_clean = 20*log10(abs(Y_positive_clean));
+
+% Plot the magnitude spectrum in dB
+magnitude_dB = 20*log10(abs(Y_positive));
+figure;
+plot(positive_freqs, magnitude_dB);
+hold on;
+plot(positive_freqs_clean, magnitude_dB_clean);
+title('Magnitude Spectrum of Recorded Signal and "Clean" Sinusoid');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude (dB)');
+xlim([0 3000]);
+legend('Recorded Signal', '"Clean Signal"');
+grid on;
+hold off;
