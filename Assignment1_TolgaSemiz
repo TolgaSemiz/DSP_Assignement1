@@ -12,7 +12,7 @@ cropped_signal = signal(1:N_target); % Crop to the first N_target samples
 
 % Compute the magnitude spectrum using the FFT
 Y = fft(cropped_signal);
-Y = Y / N; % Normalize the FFT
+Y = Y / N_target; % Normalize the FFT
 freq = (0:N_target-1)*(fs/N_target); % Frequency vector
 
 % Get only the positive frequencies because they are symetric and complex conjugates
